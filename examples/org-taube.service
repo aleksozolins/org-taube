@@ -1,0 +1,8 @@
+[Unit]
+Description=Sync mail and run org-taube
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "mbsync -a && org-taube --auto"

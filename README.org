@@ -1,0 +1,276 @@
+#+title: org-taube
+
+[[file:taube.png]]
+
+Email-first capture pipeline for Org mode.
+
+Send an email, get an Org entry. No mobile apps, no file sync, no Emacs runtime required.
+
+* Installation
+
+Requires Python 3.11+.
+
+#+BEGIN_SRC sh
+pip install .
+#+END_SRC
+
+Then copy the example config:
+
+#+BEGIN_SRC sh
+mkdir -p ~/.config/org-taube
+cp config.toml.example ~/.config/org-taube/config.toml
+#+END_SRC
+
+Edit =~/.config/org-taube/config.toml= with your Maildir path and target files.
+
+* Usage
+
+#+BEGIN_SRC sh
+org-taube              # interactive (default) — preview and approve each entry
+org-taube --auto       # automatic — process all, no prompts (for cron/plist)
+mbsync -a && org-taube # chain with mail sync
+#+END_SRC
+
+** Automation
+
+Use =--auto= with a scheduler to process mail in the background.
+
+*cron* (every 5 minutes):
+
+#+BEGIN_SRC sh
+*/5 * * * * mbsync -a && org-taube --auto
+#+END_SRC
+
+*launchd* (macOS):
+
+#+BEGIN_SRC sh
+cp examples/com.org-taube.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.org-taube.plist
+#+END_SRC
+
+*systemd* (Linux):
+
+#+BEGIN_SRC sh
+cp examples/org-taube.service examples/org-taube.timer ~/.config/systemd/user/
+systemctl --user enable --now org-taube.timer
+#+END_SRC
+
+Full example files are in the [[file:examples/][examples/]] directory.
+
+* How It Works
+
+#+BEGIN_EXAMPLE
+[Capture Source] → Email → IMAP → mbsync → Maildir → org-taube → Org file
+#+END_EXAMPLE
+
+1. You send an email to a dedicated capture address
+2. =mbsync= (or equivalent) syncs it to a local Maildir
+3. =org-taube= reads unread messages, renders Org entries, writes them to your files
+4. Messages are marked as read (or deleted, if configured)
+
+* Input Format
+
+org-taube uses progressive specificity. The more structure you provide, the
+more precise the output. Provide none and you still get a useful entry.
+
+** Quick capture (subject only)
+
+Just send an email. The subject becomes the title, the body becomes content.
+Default type is =note=.
+
+Subject: =Meeting notes=
+
+#+BEGIN_EXAMPLE
+,* Meeting notes
+:PROPERTIES:
+:CREATED:    [2026-03-23 Mon 10:15]
+:FROM:       aleks@example.com
+:MESSAGE_ID: <abc123@mail.example.com>
+:END:
+#+END_EXAMPLE
+
+** Subject-line prefix
+
+Start your subject with an Org keyword to create a task. Otherwise it's a note.
+
+- =TODO Buy milk= → =* TODO Buy milk=
+- =NEXT Review the PR= → =* NEXT Review the PR=
+- =todo Buy milk= → same (case insensitive)
+- =Meeting notes= → =* Meeting notes= (no keyword, defaults to note)
+
+For custom types (e.g., workout), use body headers with =TYPE:= instead.
+
+** Body headers
+
+For automation or full control, add =KEY: value= metadata at the top of the
+email body, followed by a blank line:
+
+#+BEGIN_EXAMPLE
+TYPE: task
+TAGS: work,urgent
+SOURCE: zapier
+
+Fix failing Zap
+#+END_EXAMPLE
+
+Supported fields:
+
+- =TYPE= — type to use (e.g., =task=, =note=, =workout=)
+- =KEYWORD= — Org heading keyword override (e.g., =NEXT=, =WAITING=)
+- =TAGS= — comma-separated tags
+- =SOURCE= — where the capture came from (e.g., =zapier=, =slack=)
+- =SCHEDULED= — ISO date for Org SCHEDULED planning (e.g., =2026-03-28=)
+- =DEADLINE= — ISO date for Org DEADLINE planning (e.g., =2026-04-01=)
+- =CREATED= — ISO timestamp (defaults to email date)
+- =TITLE= — override the subject line as the heading title
+- =TARGET= — file path override for this entry
+- =PARENT= — heading to insert under (overrides config)
+
+Custom type properties (e.g., =DURATION=, =DISTANCE= for a workout type)
+are also recognized as body headers and written into the properties drawer:
+
+#+BEGIN_EXAMPLE
+TYPE: workout
+DURATION: 45min
+DISTANCE: 5km
+
+Ran the lake loop, felt good.
+#+END_EXAMPLE
+
+Body headers take precedence over the subject-line keyword. =TARGET=,
+=PARENT=, and =KEYWORD= override config values. =TAGS= are merged with
+any tags defined on the type.
+
+** Freeform body
+
+Everything after the metadata (or the entire body if no metadata) is passed
+through verbatim. Checklists, prose, links, inline markup — whatever you write.
+
+Subject: =TODO Walk the dog=
+
+Body:
+#+BEGIN_EXAMPLE
+- [ ] put on leash
+- [ ] grab keys
+- [ ] lock the door
+#+END_EXAMPLE
+
+Result:
+#+BEGIN_EXAMPLE
+,* TODO Walk the dog
+:PROPERTIES:
+:CREATED:    [2026-03-25 Wed 10:00]
+:FROM:       aleks@example.com
+:MESSAGE_ID: <abc123@mail.example.com>
+:END:
+
+- [ ] put on leash
+- [ ] grab keys
+- [ ] lock the door
+#+END_EXAMPLE
+
+* Configuration
+
+Config lives at =~/.config/org-taube/config.toml=. See =config.toml.example=
+for a fully commented starting point. Override with =--config PATH=.
+
+** Maildir
+
+#+BEGIN_SRC toml
+[maildir]
+path = "~/Mail/org-capture"        # required — path to Maildir
+# post_process = "read"            # "read" (default) or "delete"
+# signature_separator = "-- "      # strip signature after this (default: "-- ")
+#+END_SRC
+
+** Defaults
+
+Fallback file and attachment path for types that don't set their own:
+
+#+BEGIN_SRC toml
+[defaults]
+file = "~/org/capture.org"
+attachment_path = "~/org/attachments"
+#+END_SRC
+
+** Types
+
+=task= and =note= are built-in. Each type can have a =file= and
+=parent= to control where entries are written. Custom types are note
+variants — they also get tags, properties, and attachment paths but
+not keywords (only tasks have keywords).
+
+#+BEGIN_SRC toml
+[types.task]
+file = "~/org/tasks.org"
+parent = "Tasks"
+
+[types.workout]
+file = "~/org/health.org"
+tags = ["health", "log"]
+properties = ["DURATION", "DISTANCE"]
+attachment_path = "~/org/health/files"
+#+END_SRC
+
+** Sender trust
+
+Control who can create entries:
+
+#+BEGIN_SRC toml
+[trust]
+trust_all = true                           # for dedicated capture addresses
+# senders = ["me@example.com", "*@mydomain.com"]
+#+END_SRC
+
+* Capture Sources
+
+Anything that can send email can feed org-taube:
+
+- *Phone*: iOS Shortcuts, Android Tasker, share-to-email
+- *Automation*: Zapier, Make.com, IFTTT, Slack workflows, GitHub
+- *CLI*: =mail= command, scripts
+- *Passive*: email forwarding rules, label-based auto-forwarding
+
+** Example: Slack → Org via Zapier
+
+React to a Slack message with a =:todo:= emoji and it becomes an Org
+task. Set up a Zapier zap:
+
+1. *Trigger*: Slack — New Reaction Added (filter to =:todo:=)
+2. *Action*: Gmail — Send Email to your capture address
+
+Email template:
+
+#+BEGIN_EXAMPLE
+To: capture@yourdomain.com
+Subject: {{Message Text}}
+
+TYPE: task
+TAGS: slack
+SOURCE: zapier
+SCHEDULED:
+#+END_EXAMPLE
+
+=SCHEDULED:= is left empty intentionally — org-taube ignores empty
+values, so the same template works whether or not you fill it in.
+The message text becomes the heading, tagged and routed automatically.
+
+The same pattern works with Make.com, IFTTT, or any tool that can
+send email. Templatize the body headers for the metadata you want,
+leave keys empty when a field doesn't apply.
+
+* File Layout
+
+| Path                                     | Purpose                       |
+|------------------------------------------+-------------------------------|
+| =~/.config/org-taube/config.toml=        | Configuration                 |
+| =~/.local/share/org-taube/org-taube.log= | Log file                      |
+| =~/.local/share/org-taube/=              | Default attachment storage    |
+
+* Dependencies
+
+- Python 3.11+ (stdlib only — =tomllib=, =mailbox=, =email=)
+- A Maildir-compatible mailbox
+- mbsync or equivalent (optional, for IMAP sync)
+
+Zero external Python dependencies.

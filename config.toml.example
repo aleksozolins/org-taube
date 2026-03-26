@@ -1,0 +1,42 @@
+# org-taube configuration
+# Copy to ~/.config/org-taube/config.toml and edit paths.
+
+[maildir]
+path = "~/Mail/org-capture"
+
+# Post-processing: "read" (default) or "delete"
+# post_process = "read"
+
+# Signature separator (default: "-- " per RFC 3676)
+# signature_separator = "-- "
+
+# --- Sender Trust ---
+# Whitelist of trusted sender addresses.
+# Supports exact addresses and wildcard domain patterns.
+# Set trust_all = true to accept from any sender (for dedicated capture addresses).
+
+[trust]
+# senders = ["me@example.com", "*@mydomain.com"]
+trust_all = true
+
+# --- Defaults ---
+# Fallback file and attachment path for types without their own.
+
+[defaults]
+file = "~/org/capture.org"
+attachment_path = "~/org/attachments"
+
+# --- Types ---
+# Built-in types (task, note) work without config.
+# Add file and parent to route entries. Custom types are note
+# variants — tags, properties, and attachment paths but no keywords.
+
+# [types.task]
+# file = "~/org/tasks.org"
+# parent = "Tasks"
+
+# [types.workout]
+# file = "~/org/health.org"
+# tags = ["health", "log"]
+# properties = ["DURATION", "DISTANCE"]
+# attachment_path = "~/org/health/files"

@@ -1,6 +1,6 @@
 #+title: org-taube
 
-[[file:taube.png]]
+#+html: <img src="taube.png" alt="org-taube" width="150">
 
 Email-first capture pipeline for Org mode.
 

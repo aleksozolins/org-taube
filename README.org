@@ -11,6 +11,8 @@ Send an email, get an Org entry. No mobile apps, no file sync, no Emacs runtime 
 Requires Python 3.11+.
 
 #+BEGIN_SRC sh
+git clone https://github.com/aleksozolins/org-taube.git
+cd org-taube
 pip install .
 #+END_SRC
 

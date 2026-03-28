@@ -30,10 +30,15 @@ attachment_path = "~/org/attachments"
 # Built-in types (task, note) work without config.
 # Add file and parent to route entries. Custom types are note
 # variants — tags, properties, and attachment paths but no keywords.
+#
+# The task type recognises TODO and DONE out of the box.  Add extra
+# Org keywords (e.g. NEXT, WAITING) with the keywords list — they
+# are merged with the built-in defaults.
 
 # [types.task]
 # file = "~/org/tasks.org"
 # parent = "Tasks"
+# keywords = ["NEXT", "WAITING"]
 
 # [types.workout]
 # file = "~/org/health.org"

@@ -1,0 +1,18 @@
+#+title: Changelog
+
+* 0.1.0 - 2026-03-28
+
+Initial release.
+
+- Email-to-Org capture pipeline with Maildir input
+- Built-in task and note types, custom type support
+- Subject-line keyword prefix matching (TODO, DONE, etc.)
+- Body headers for full control (TYPE, TAGS, SCHEDULED, DEADLINE, etc.)
+- SCHEDULED/DEADLINE planning line support
+- Configurable file and parent routing per type
+- Auto-creates parent headings when missing
+- Interactive mode with colored preview, automatic mode for cron/launchd
+- Attachment handling with configurable paths
+- Sender trust (allowlist or trust-all)
+- Signature stripping
+- Zero external Python dependencies

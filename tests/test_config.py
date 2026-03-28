@@ -151,6 +151,30 @@ class TestLoadConfig(unittest.TestCase):
         self.assertEqual(task.file, Path("/org/tasks.org"))
         self.assertEqual(task.parent, "Tasks")
 
+    def test_task_extra_keywords_merged(self):
+        """Extra keywords in [types.task] merge with built-in TODO/DONE."""
+        toml = (
+            '[maildir]\npath = "/m"\n'
+            '[types.task]\n'
+            'file = "/org/tasks.org"\n'
+            'keywords = ["NEXT", "WAITING"]\n'
+        )
+        cfg = load_config(self._write_toml(toml))
+        task = cfg.types["task"]
+        self.assertEqual(task.keywords, ["TODO", "DONE", "NEXT", "WAITING"])
+        self.assertEqual(task.default_keyword, "TODO")
+
+    def test_task_duplicate_keywords_ignored(self):
+        """Duplicate keywords (case-insensitive) are not added twice."""
+        toml = (
+            '[maildir]\npath = "/m"\n'
+            '[types.task]\n'
+            'keywords = ["todo", "NEXT"]\n'
+        )
+        cfg = load_config(self._write_toml(toml))
+        task = cfg.types["task"]
+        self.assertEqual(task.keywords, ["TODO", "DONE", "NEXT"])
+
     def test_parse_type_custom(self):
         """A custom type gets empty keywords and no default_keyword."""
         toml = (

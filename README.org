@@ -28,8 +28,8 @@ Edit =~/.config/org-taube/config.toml= with your Maildir path and target files.
 * Usage
 
 #+BEGIN_SRC sh
-org-taube              # interactive (default) — preview and approve each entry
-org-taube --auto       # automatic — process all, no prompts (for cron/plist)
+org-taube              # interactive (default) - preview and approve each entry
+org-taube --auto       # automatic - process all, no prompts (for cron/plist)
 mbsync -a && org-taube # chain with mail sync
 #+END_SRC
 
@@ -117,16 +117,16 @@ Fix failing Zap
 
 Supported fields:
 
-- =TYPE= — type to use (e.g., =task=, =note=, =workout=)
-- =KEYWORD= — Org heading keyword override (e.g., =NEXT=, =WAITING=)
-- =TAGS= — comma-separated tags
-- =SOURCE= — where the capture came from (e.g., =zapier=, =slack=)
-- =SCHEDULED= — ISO date for Org SCHEDULED planning (e.g., =2026-03-28=)
-- =DEADLINE= — ISO date for Org DEADLINE planning (e.g., =2026-04-01=)
-- =CREATED= — ISO timestamp (defaults to email date)
-- =TITLE= — override the subject line as the heading title
-- =TARGET= — file path override for this entry
-- =PARENT= — heading to insert under (overrides config)
+- =TYPE= - type to use (e.g., =task=, =note=, =workout=)
+- =KEYWORD= - Org heading keyword override (e.g., =NEXT=, =WAITING=)
+- =TAGS= - comma-separated tags
+- =SOURCE= - where the capture came from (e.g., =zapier=, =slack=)
+- =SCHEDULED= - ISO date for Org SCHEDULED planning (e.g., =2026-03-28=)
+- =DEADLINE= - ISO date for Org DEADLINE planning (e.g., =2026-04-01=)
+- =CREATED= - ISO timestamp (defaults to email date)
+- =TITLE= - override the subject line as the heading title
+- =TARGET= - file path override for this entry
+- =PARENT= - heading to insert under (overrides config)
 
 Custom type properties (e.g., =DURATION=, =DISTANCE= for a workout type)
 are also recognized as body headers and written into the properties drawer:
@@ -146,7 +146,7 @@ any tags defined on the type.
 ** Freeform body
 
 Everything after the metadata (or the entire body if no metadata) is passed
-through verbatim. Checklists, prose, links, inline markup — whatever you write.
+through verbatim. Checklists, prose, links, inline markup - whatever you write.
 
 Subject: =TODO Walk the dog=
 
@@ -180,7 +180,7 @@ for a fully commented starting point. Override with =--config PATH=.
 
 #+BEGIN_SRC toml
 [maildir]
-path = "~/Mail/org-capture"        # required — path to Maildir
+path = "~/Mail/org-capture"        # required - path to Maildir
 # post_process = "read"            # "read" (default) or "delete"
 # signature_separator = "-- "      # strip signature after this (default: "-- ")
 #+END_SRC
@@ -199,13 +199,18 @@ attachment_path = "~/org/attachments"
 
 =task= and =note= are built-in. Each type can have a =file= and
 =parent= to control where entries are written. Custom types are note
-variants — they also get tags, properties, and attachment paths but
+variants - they also get tags, properties, and attachment paths but
 not keywords (only tasks have keywords).
+
+The task type recognises =TODO= and =DONE= out of the box. Add extra
+Org keywords (e.g. =NEXT=, =WAITING=) with the =keywords= list -
+they are merged with the built-in defaults.
 
 #+BEGIN_SRC toml
 [types.task]
 file = "~/org/tasks.org"
 parent = "Tasks"
+keywords = ["NEXT", "WAITING"]
 
 [types.workout]
 file = "~/org/health.org"
@@ -238,8 +243,8 @@ Anything that can send email can feed org-taube:
 React to a Slack message with a =:todo:= emoji and it becomes an Org
 task. Set up a Zapier zap:
 
-1. *Trigger*: Slack — New Reaction Added (filter to =:todo:=)
-2. *Action*: Gmail — Send Email to your capture address
+1. *Trigger*: Slack - New Reaction Added (filter to =:todo:=)
+2. *Action*: Gmail - Send Email to your capture address
 
 Email template:
 
@@ -253,7 +258,7 @@ SOURCE: zapier
 SCHEDULED:
 #+END_EXAMPLE
 
-=SCHEDULED:= is left empty intentionally — org-taube ignores empty
+=SCHEDULED:= is left empty intentionally - org-taube ignores empty
 values, so the same template works whether or not you fill it in.
 The message text becomes the heading, tagged and routed automatically.
 
@@ -271,8 +276,19 @@ leave keys empty when a field doesn't apply.
 
 * Dependencies
 
-- Python 3.11+ (stdlib only — =tomllib=, =mailbox=, =email=)
+- Python 3.11+ (stdlib only - =tomllib=, =mailbox=, =email=)
 - A Maildir-compatible mailbox
 - mbsync or equivalent (optional, for IMAP sync)
 
 Zero external Python dependencies.
+
+* Contributing
+
+PRs welcome. A few ground rules:
+
+- *No external dependencies* - stdlib only.
+- *Run the tests* before submitting: =python -m unittest discover -s tests=
+- *Add tests* for new features.
+- Keep changes focused - one feature or fix per PR.
+
+See [[file:CHANGELOG.org][CHANGELOG.org]] for release history.

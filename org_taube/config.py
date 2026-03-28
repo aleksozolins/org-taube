@@ -46,7 +46,9 @@ def _parse_type(name: str, data: dict) -> TypeConfig:
     default_keyword (those only exist on the built-in task type).
 
     For built-in type names (task, note), the config overlays onto
-    the built-in so keywords are preserved.
+    the built-in so keywords are preserved.  The task type also
+    supports an optional ``keywords`` list in config — these are
+    merged with the built-in TODO and DONE (duplicates removed).
     """
     attachment_path = None
     if "attachment_path" in data:
@@ -58,9 +60,20 @@ def _parse_type(name: str, data: dict) -> TypeConfig:
     # Start from built-in if this is a known type.
     builtin = BUILTIN_TYPES.get(name)
 
+    # Merge user-supplied keywords with built-in keywords (task type).
+    if builtin:
+        keywords = list(builtin.keywords)
+        seen = {kw.upper() for kw in keywords}
+        for kw in data.get("keywords", []):
+            if kw.upper() not in seen:
+                keywords.append(kw)
+                seen.add(kw.upper())
+    else:
+        keywords = []
+
     return TypeConfig(
         name=name,
-        keywords=builtin.keywords if builtin else [],
+        keywords=keywords,
         default_keyword=builtin.default_keyword if builtin else None,
         tags=data.get("tags", []),
         properties=data.get("properties", []),

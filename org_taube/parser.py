@@ -183,7 +183,7 @@ def _parse_body_headers(
 def parse_email(msg: mailbox.MaildirMessage, config: Config) -> CaptureEntry:
     """Parse *msg* into a :class:`CaptureEntry`."""
     _name, from_addr = email.utils.parseaddr(msg.get("From", ""))
-    subject = msg.get("Subject", "")
+    subject = " ".join(msg.get("Subject", "").split())
     date = _parse_date(msg.get("Date"))
     message_id = msg.get("Message-ID", "")
 

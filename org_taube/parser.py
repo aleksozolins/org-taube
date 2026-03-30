@@ -313,6 +313,7 @@ def mark_processed(
         for key, m in md.iteritems():
             if m.get("Message-ID") == msg.get("Message-ID"):
                 msg.add_flag("S")
+                msg.set_subdir("cur")
                 md[key] = msg
                 break
         md.flush()

@@ -3,11 +3,20 @@ sender trust, and full email parsing."""
 
 import email
 import mailbox
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 
 from org_taube import Config, TypeConfig
-from org_taube.parser import _parse_body_headers, _strip_html, is_trusted, parse_email
+from org_taube.parser import (
+    _parse_body_headers,
+    _strip_html,
+    is_trusted,
+    mark_processed,
+    parse_email,
+    scan_unread,
+)
 
 
 def _minimal_config(**overrides) -> Config:
@@ -283,6 +292,110 @@ class TestParseEmail(unittest.TestCase):
         self.assertIsNotNone(entry.deadline)
         self.assertEqual(entry.deadline.month, 4)
         self.assertEqual(entry.deadline.day, 1)
+
+
+class TestSubjectFolding(unittest.TestCase):
+    """Subject lines with RFC 2822 folding are unfolded."""
+
+    def test_folded_subject_unfolded(self):
+        raw = (
+            "Subject: TODO Action on Slack thread about Discussing\r\n"
+            " changes to Dev Esc tickets, boundary review\r\n"
+            "From: sender@example.com\r\n"
+            "Date: Mon, 01 Jan 2024 12:00:00 +0000\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "body\r\n"
+        )
+        msg = _make_maildir_message(raw)
+        config = _minimal_config()
+        entry = parse_email(msg, config)
+        self.assertNotIn("\n", entry.title)
+        self.assertIn("tickets", entry.title)
+
+
+class TestMarkProcessed(unittest.TestCase):
+    """Tests for mark_processed — flags and subdir."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.maildir_path = Path(self.tmpdir) / "testmail"
+        self.md = mailbox.Maildir(str(self.maildir_path), create=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    def _add_message(self):
+        raw = (
+            "Subject: Test\r\n"
+            "From: sender@example.com\r\n"
+            "Message-ID: <test123@example.com>\r\n"
+            "Date: Mon, 01 Jan 2024 12:00:00 +0000\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "body\r\n"
+        )
+        msg = mailbox.MaildirMessage(email.message_from_string(raw))
+        self.md.add(msg)
+        self.md.flush()
+        return msg
+
+    def test_mark_read_moves_to_cur(self):
+        msg = self._add_message()
+        mark_processed(msg, self.maildir_path, "read")
+        cur_files = list((self.maildir_path / "cur").iterdir())
+        new_files = list((self.maildir_path / "new").iterdir())
+        self.assertEqual(len(new_files), 0)
+        self.assertEqual(len(cur_files), 1)
+
+    def test_mark_read_adds_seen_flag(self):
+        msg = self._add_message()
+        mark_processed(msg, self.maildir_path, "read")
+        cur_files = list((self.maildir_path / "cur").iterdir())
+        self.assertTrue(cur_files[0].name.endswith("S"))
+
+    def test_mark_delete_removes_message(self):
+        msg = self._add_message()
+        mark_processed(msg, self.maildir_path, "delete")
+        cur_files = list((self.maildir_path / "cur").iterdir())
+        new_files = list((self.maildir_path / "new").iterdir())
+        self.assertEqual(len(cur_files) + len(new_files), 0)
+
+
+class TestScanUnread(unittest.TestCase):
+    """Tests for scan_unread."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.maildir_path = Path(self.tmpdir) / "testmail"
+        self.md = mailbox.Maildir(str(self.maildir_path), create=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    def test_new_messages_are_unread(self):
+        raw = (
+            "Subject: Test\r\nFrom: s@e.com\r\n"
+            "Message-ID: <a@e.com>\r\n"
+            "Content-Type: text/plain\r\n\r\nbody\r\n"
+        )
+        msg = mailbox.MaildirMessage(email.message_from_string(raw))
+        self.md.add(msg)
+        self.md.flush()
+        self.assertEqual(len(scan_unread(self.maildir_path)), 1)
+
+    def test_seen_messages_excluded(self):
+        raw = (
+            "Subject: Test\r\nFrom: s@e.com\r\n"
+            "Message-ID: <a@e.com>\r\n"
+            "Content-Type: text/plain\r\n\r\nbody\r\n"
+        )
+        msg = mailbox.MaildirMessage(email.message_from_string(raw))
+        msg.add_flag("S")
+        msg.set_subdir("cur")
+        self.md.add(msg)
+        self.md.flush()
+        self.assertEqual(len(scan_unread(self.maildir_path)), 0)
 
 
 if __name__ == "__main__":

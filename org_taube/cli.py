@@ -284,6 +284,7 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(1)
 
     if not messages:
+        logger.debug("No unread messages")
         if interactive:
             print("No unread messages.")
         return

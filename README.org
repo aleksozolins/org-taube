@@ -36,11 +36,12 @@ mbsync -a && org-taube # chain with mail sync
 ** Automation
 
 Use =--auto= with a scheduler to process mail in the background.
+Assumes your Maildir is already being synced (e.g. via mbsync, offlineimap, or a brew service).
 
 *cron* (every 5 minutes):
 
 #+BEGIN_SRC sh
-*/5 * * * * mbsync -a && org-taube --auto
+*/5 * * * * org-taube --auto
 #+END_SRC
 
 *launchd* (macOS):

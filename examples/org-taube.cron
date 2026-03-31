@@ -1,3 +1,3 @@
-# Sync mail and run org-taube every 5 minutes.
+# Run org-taube every 5 minutes.
 # Install with: crontab -e
-*/5 * * * * mbsync -a && org-taube --auto
+*/5 * * * * org-taube --auto

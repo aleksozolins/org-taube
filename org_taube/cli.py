@@ -17,7 +17,7 @@ from org_taube.writer import save_attachments, write_entry
 
 def _setup_logging(config: Config) -> logging.Logger:
     """Configure logging to the XDG data directory."""
-    log_dir = Path("~/.local/share/org-taube").expanduser()
+    log_dir = Path("~/.local/state/org-taube").expanduser()
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "org-taube.log"
 
@@ -190,7 +190,7 @@ def _process_message(msg, config, engine, logger, interactive=True):
     if entry.attachments:
         att_dir = type_config.attachment_path or config.default_attachment_path
         if att_dir is None:
-            att_dir = Path("~/.local/share/org-taube/attachments").expanduser()
+            att_dir = Path("~/.local/state/org-taube/attachments").expanduser()
         prefix = datetime.now().strftime("%Y%m%d")
         paths = save_attachments(entry.attachments, att_dir, prefix)
         saved_paths = [str(p) for p in paths]

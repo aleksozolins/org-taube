@@ -272,8 +272,7 @@ leave keys empty when a field doesn't apply.
 | Path                                     | Purpose                       |
 |------------------------------------------+-------------------------------|
 | =~/.config/org-taube/config.toml=        | Configuration                 |
-| =~/.local/share/org-taube/org-taube.log= | Log file                      |
-| =~/.local/share/org-taube/=              | Default attachment storage    |
+| =~/.local/state/org-taube/org-taube.log= | Log file                      |
 
 * Dependencies
 

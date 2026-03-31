@@ -1,5 +1,19 @@
 #+title: Changelog
 
+* 0.1.1 - 2026-03-31
+
+Bug fixes and improvements.
+
+- Fix: unfold long email subject lines (RFC 2822 header folding)
+- Fix: move messages from new/ to cur/ when marking as read (mu4e compatibility)
+- Fix: skip body headers with empty values (Zapier template compatibility)
+- Add optional extra keywords for task type (e.g. NEXT, WAITING)
+- Add ANSI color preview in interactive mode matching Emacs Org faces
+- Default-yes prompt [Y/n/q] in interactive mode
+- Log when no unread messages found (--auto mode)
+- Move log to ~/.local/state per XDG spec
+- Decouple mail sync from automation examples
+
 * 0.1.0 - 2026-03-28
 
 Initial release.

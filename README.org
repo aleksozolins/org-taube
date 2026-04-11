@@ -227,6 +227,7 @@ keywords = ["NEXT", "WAITING"]
 [types.txn]
 file = "~/finance/captures.org"
 keywords = ["TXN"]
+attachments = false              # don't save attachments for this type
 
 [types.workout]
 file = "~/org/health.org"

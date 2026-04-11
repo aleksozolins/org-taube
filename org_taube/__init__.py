@@ -44,6 +44,7 @@ class TypeConfig:
     tags: list[str] = field(default_factory=list)
     properties: list[str] = field(default_factory=list)
     attachment_path: Path | None = None
+    attachments: bool = True
     file: Path | None = None
     parent: str | None = None
 

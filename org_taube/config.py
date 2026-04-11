@@ -79,6 +79,7 @@ def _parse_type(name: str, data: dict) -> TypeConfig:
         tags=data.get("tags", []),
         properties=data.get("properties", []),
         attachment_path=attachment_path,
+        attachments=data.get("attachments", True),
         file=file_path,
         parent=data.get("parent"),
     )

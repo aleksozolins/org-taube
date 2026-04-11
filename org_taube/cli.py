@@ -187,7 +187,7 @@ def _process_message(msg, config, engine, logger, interactive=True):
 
     # Handle attachments.
     saved_paths: list[str] = []
-    if entry.attachments:
+    if entry.attachments and type_config.attachments:
         att_dir = type_config.attachment_path or config.default_attachment_path
         if att_dir is None:
             att_dir = Path("~/.local/state/org-taube/attachments").expanduser()

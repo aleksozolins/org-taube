@@ -46,6 +46,7 @@ attachment_path = "~/org/attachments"
 # [types.txn]
 # file = "~/finance/captures.org"
 # keywords = ["TXN"]
+# attachments = false   # skip saving attachments for this type
 
 # [types.workout]
 # file = "~/org/health.org"

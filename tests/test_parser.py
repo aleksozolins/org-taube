@@ -294,6 +294,89 @@ class TestParseEmail(unittest.TestCase):
         self.assertEqual(entry.deadline.day, 1)
 
 
+class TestSubjectTags(unittest.TestCase):
+    """Tags extracted from subject-line Org-style tag suffix."""
+
+    def test_tags_extracted_from_subject(self):
+        raw = (
+            "Subject: TODO Buy milk :errands:\r\n"
+            "From: sender@example.com\r\n"
+            "Date: Mon, 01 Jan 2024 12:00:00 +0000\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "body\r\n"
+        )
+        msg = _make_maildir_message(raw)
+        config = _minimal_config()
+        entry = parse_email(msg, config)
+        self.assertIn("errands", entry.tags)
+        self.assertNotIn(":errands:", entry.title)
+
+    def test_multiple_tags_from_subject(self):
+        raw = (
+            "Subject: Walk the dog :errands:health:\r\n"
+            "From: sender@example.com\r\n"
+            "Date: Mon, 01 Jan 2024 12:00:00 +0000\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "body\r\n"
+        )
+        msg = _make_maildir_message(raw)
+        config = _minimal_config()
+        entry = parse_email(msg, config)
+        self.assertEqual(entry.tags, ["errands", "health"])
+        self.assertEqual(entry.title, "Walk the dog")
+
+    def test_subject_tags_merge_with_body_tags(self):
+        raw = (
+            "Subject: Buy milk :errands:\r\n"
+            "From: sender@example.com\r\n"
+            "Date: Mon, 01 Jan 2024 12:00:00 +0000\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "TAGS: groceries\r\n"
+            "\r\n"
+            "body\r\n"
+        )
+        msg = _make_maildir_message(raw)
+        config = _minimal_config()
+        entry = parse_email(msg, config)
+        self.assertIn("errands", entry.tags)
+        self.assertIn("groceries", entry.tags)
+
+    def test_duplicate_tags_deduplicated(self):
+        raw = (
+            "Subject: Buy milk :errands:\r\n"
+            "From: sender@example.com\r\n"
+            "Date: Mon, 01 Jan 2024 12:00:00 +0000\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "TAGS: errands,groceries\r\n"
+            "\r\n"
+            "body\r\n"
+        )
+        msg = _make_maildir_message(raw)
+        config = _minimal_config()
+        entry = parse_email(msg, config)
+        self.assertEqual(entry.tags.count("errands"), 1)
+        self.assertIn("groceries", entry.tags)
+
+    def test_no_tags_in_subject(self):
+        raw = (
+            "Subject: Just a plain subject\r\n"
+            "From: sender@example.com\r\n"
+            "Date: Mon, 01 Jan 2024 12:00:00 +0000\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "body\r\n"
+        )
+        msg = _make_maildir_message(raw)
+        config = _minimal_config()
+        entry = parse_email(msg, config)
+        self.assertEqual(entry.tags, [])
+        self.assertEqual(entry.title, "Just a plain subject")
+
+
 class TestSubjectFolding(unittest.TestCase):
     """Subject lines with RFC 2822 folding are unfolded."""
 

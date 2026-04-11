@@ -16,6 +16,25 @@ from pathlib import Path
 
 from . import Attachment, CaptureEntry, Config
 
+# Org-style tag suffix at end of string, e.g. "Buy milk  :errands:food:"
+_SUBJECT_TAGS_RE = re.compile(r"\s+((?::[a-zA-Z0-9_@]+)+:)\s*$")
+
+
+def _extract_subject_tags(text: str) -> tuple[str, list[str]]:
+    """Strip an Org-style tag suffix from *text*.
+
+    Returns (cleaned_text, tags).  If no tags are found, returns
+    the original text and an empty list.
+    """
+    m = _SUBJECT_TAGS_RE.search(text)
+    if not m:
+        return text, []
+    tag_str = m.group(1)
+    tags = [t for t in tag_str.split(":") if t]
+    cleaned = text[:m.start()]
+    return cleaned, tags
+
+
 # Body-header keys recognised during metadata parsing (case-insensitive).
 _BODY_HEADER_KEYS: set[str] = {
     "type",
@@ -201,6 +220,10 @@ def parse_email(msg: mailbox.MaildirMessage, config: Config) -> CaptureEntry:
     type_name = headers.get("type", "")
     keyword = headers.get("keyword")
     title = headers.get("title", subject)
+
+    # Extract Org-style tags from the end of the title (e.g. "Buy milk :errands:").
+    title, subject_tags = _extract_subject_tags(title)
+
     source = headers.get("source")
     parent = headers.get("parent")
 
@@ -208,9 +231,14 @@ def parse_email(msg: mailbox.MaildirMessage, config: Config) -> CaptureEntry:
     if "target" in headers:
         target = Path(headers["target"])
 
-    tags: list[str] = []
+    tags: list[str] = list(subject_tags)
     if "tags" in headers:
-        tags = [t.strip() for t in headers["tags"].split(",") if t.strip()]
+        seen = {t.lower() for t in tags}
+        for t in headers["tags"].split(","):
+            t = t.strip()
+            if t and t.lower() not in seen:
+                tags.append(t)
+                seen.add(t.lower())
 
     created: datetime | None = date
     if "created" in headers:

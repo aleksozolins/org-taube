@@ -101,6 +101,13 @@ Start your subject with an Org keyword to create a task. Otherwise it's a note.
 - =todo Buy milk= → same (case insensitive)
 - =Meeting notes= → =* Meeting notes= (no keyword, defaults to note)
 
+You can also add Org-style tags at the end of the subject:
+
+- =TODO Buy milk :errands:= → =* TODO Buy milk  :errands:=
+- =Meeting notes :work:important:= → =* Meeting notes  :work:important:=
+
+Subject tags are merged with body header tags and config-level tags.
+
 For custom types (e.g., workout), use body headers with =TYPE:= instead.
 
 ** Body headers

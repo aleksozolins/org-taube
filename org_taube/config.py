@@ -41,14 +41,14 @@ def _expand(p: str) -> Path:
 def _parse_type(name: str, data: dict) -> TypeConfig:
     """Parse a single [types.*] section into a TypeConfig.
 
-    Custom types are note variants — they get tags, properties,
-    attachment_path, file, and parent but NOT keywords or
-    default_keyword (those only exist on the built-in task type).
-
     For built-in type names (task, note), the config overlays onto
     the built-in so keywords are preserved.  The task type also
     supports an optional ``keywords`` list in config — these are
     merged with the built-in TODO and DONE (duplicates removed).
+
+    Custom types can also define keywords for subject-line matching.
+    These keywords are used for routing only — they are not rendered
+    in the heading unless the type has a default_keyword.
     """
     attachment_path = None
     if "attachment_path" in data:
@@ -60,16 +60,17 @@ def _parse_type(name: str, data: dict) -> TypeConfig:
     # Start from built-in if this is a known type.
     builtin = BUILTIN_TYPES.get(name)
 
-    # Merge user-supplied keywords with built-in keywords (task type).
+    # Merge user-supplied keywords with built-in keywords (if any).
     if builtin:
         keywords = list(builtin.keywords)
         seen = {kw.upper() for kw in keywords}
-        for kw in data.get("keywords", []):
-            if kw.upper() not in seen:
-                keywords.append(kw)
-                seen.add(kw.upper())
     else:
         keywords = []
+        seen = set()
+    for kw in data.get("keywords", []):
+        if kw.upper() not in seen:
+            keywords.append(kw)
+            seen.add(kw.upper())
 
     return TypeConfig(
         name=name,

@@ -40,6 +40,13 @@ attachment_path = "~/org/attachments"
 # parent = "Tasks"
 # keywords = ["NEXT", "WAITING"]
 
+# Custom types can define keywords for subject-line routing.
+# Keywords on types without a default_keyword are stripped from
+# the subject but not rendered in the heading.
+# [types.txn]
+# file = "~/finance/captures.org"
+# keywords = ["TXN"]
+
 # [types.workout]
 # file = "~/org/health.org"
 # tags = ["health", "log"]

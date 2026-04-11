@@ -187,6 +187,19 @@ class TestLoadConfig(unittest.TestCase):
         self.assertEqual(wo.keywords, [])
         self.assertIsNone(wo.default_keyword)
 
+    def test_custom_type_with_keywords(self):
+        """Custom types can define keywords for subject-line routing."""
+        toml = (
+            '[maildir]\npath = "/m"\n'
+            '[types.txn]\n'
+            'file = "/finance/captures.org"\n'
+            'keywords = ["TXN"]\n'
+        )
+        cfg = load_config(self._write_toml(toml))
+        txn = cfg.types["txn"]
+        self.assertEqual(txn.keywords, ["TXN"])
+        self.assertIsNone(txn.default_keyword)
+
     def test_tilde_expansion(self):
         """Paths containing ~ must be expanded to the real home dir."""
         home = Path.home()

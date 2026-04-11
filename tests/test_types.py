@@ -57,6 +57,24 @@ class TestSubjectPrefixResolution(unittest.TestCase):
         self.assertEqual(title, "workout ran 5k")
         self.assertIsNone(kw)
 
+    def test_custom_type_keyword_routes_without_rendering(self) -> None:
+        types = dict(BUILTIN_TYPES)
+        types["txn"] = TypeConfig(name="txn", keywords=["TXN"])
+        engine = TypeEngine(types)
+        title, tc, kw = engine.resolve_subject_prefix("TXN Coffee 4.50")
+        self.assertEqual(tc.name, "txn")
+        self.assertEqual(title, "Coffee 4.50")
+        self.assertIsNone(kw)  # not rendered — no default_keyword
+
+    def test_custom_type_keyword_case_insensitive(self) -> None:
+        types = dict(BUILTIN_TYPES)
+        types["txn"] = TypeConfig(name="txn", keywords=["TXN"])
+        engine = TypeEngine(types)
+        title, tc, kw = engine.resolve_subject_prefix("txn Coffee 4.50")
+        self.assertEqual(tc.name, "txn")
+        self.assertEqual(title, "Coffee 4.50")
+        self.assertIsNone(kw)
+
 
 class TestResolveType(unittest.TestCase):
     """Body-header type resolution via resolve_type."""

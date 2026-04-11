@@ -54,8 +54,9 @@ class TypeEngine:
            type with that keyword; the rest is the title.
         2. No match -> note type, full subject as title.
 
-        Type names are NOT matched in the subject line. Use body headers
-        (TYPE: ...) for explicit type selection.
+        For types without a ``default_keyword``, matched keywords are
+        used for routing only — they are not returned as the keyword
+        so they don't appear in the heading.
         """
         stripped = subject.strip()
         if not stripped:
@@ -69,7 +70,10 @@ class TypeEngine:
         # 1. Keyword match
         if first_lower in self._keyword_map:
             tc, matched_kw = self._keyword_map[first_lower]
-            return (rest, tc, matched_kw)
+            # If the type has no default_keyword, the keyword is only
+            # for routing — don't render it in the heading.
+            effective_kw = matched_kw if tc.default_keyword is not None else None
+            return (rest, tc, effective_kw)
 
         # 2. No match -> note
         return (stripped, self.note_type, None)

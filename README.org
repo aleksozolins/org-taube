@@ -206,19 +206,27 @@ attachment_path = "~/org/attachments"
 ** Types
 
 =task= and =note= are built-in. Each type can have a =file= and
-=parent= to control where entries are written. Custom types are note
-variants - they also get tags, properties, and attachment paths but
-not keywords (only tasks have keywords).
+=parent= to control where entries are written.
 
 The task type recognises =TODO= and =DONE= out of the box. Add extra
 Org keywords (e.g. =NEXT=, =WAITING=) with the =keywords= list -
 they are merged with the built-in defaults.
+
+Custom types can also define keywords for subject-line matching. For
+types without a =default_keyword=, keywords are used for routing only
+- they are stripped from the subject but not rendered in the heading.
 
 #+BEGIN_SRC toml
 [types.task]
 file = "~/org/tasks.org"
 parent = "Tasks"
 keywords = ["NEXT", "WAITING"]
+
+# Custom type with a keyword for quick capture.
+# "TXN Coffee 4.50" routes here; heading is "* Coffee 4.50" (TXN stripped).
+[types.txn]
+file = "~/finance/captures.org"
+keywords = ["TXN"]
 
 [types.workout]
 file = "~/org/health.org"

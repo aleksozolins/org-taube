@@ -131,19 +131,23 @@ def _extract_text(msg: mailbox.MaildirMessage) -> str:
 
 
 def _extract_attachments(msg: mailbox.MaildirMessage) -> list[Attachment]:
-    """Return a list of :class:`Attachment` for every attachment MIME part."""
+    """Return a list of :class:`Attachment` for every attachment MIME part.
+
+    Picks up both explicit attachments (``Content-Disposition: attachment``)
+    and inline non-text parts (e.g. photos pasted into the email body).
+    """
     attachments: list[Attachment] = []
     if not msg.is_multipart():
         return attachments
 
     for part in msg.walk():
-        disp = str(part.get("Content-Disposition", ""))
-        if "attachment" not in disp:
+        content_type = part.get_content_type() or ""
+        if part.is_multipart() or content_type.startswith("text/"):
             continue
-        filename = part.get_filename() or "untitled"
         payload = part.get_payload(decode=True)
         if payload is None:
             continue
+        filename = part.get_filename() or f"untitled.{content_type.split('/')[-1]}"
         attachments.append(Attachment(filename=filename, content=payload))
 
     return attachments

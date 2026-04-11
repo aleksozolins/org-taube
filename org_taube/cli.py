@@ -211,7 +211,11 @@ def _process_message(msg, config, engine, logger, interactive=True):
         print()
 
         while True:
-            response = input("  Write this entry? [Y/n/q] ").strip().lower()
+            try:
+                response = input("  Write this entry? [Y/n/q] ").strip().lower()
+            except (KeyboardInterrupt, EOFError):
+                print("\n  Quitting.")
+                sys.exit(0)
             if response in ("", "y", "yes"):
                 break
             elif response in ("n", "no"):
